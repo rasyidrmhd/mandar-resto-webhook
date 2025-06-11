@@ -21,38 +21,46 @@ app.get("/health", (req, res) => {
 });
 
 app.post("/upload-image", async (req, res) => {
-  console.log("Webhook received:", req.body);
   const { id, image } = req.body.data;
-  console.log("Received webhook:", req.body);
+  console.log("Received image ID:", image);
+
+  const directusFileUrl = `https://mandar-resto-server.onrender.com/assets/${image}`;
+  console.log("Downloading from:", directusFileUrl);
 
   try {
-    // Get the file from Directus
-    const directusFileUrl = `https://mandar-resto-server.onrender.com/assets/${image}`;
     const fileResponse = await fetch(directusFileUrl);
-    const arrayBuffer = await fileResponse.arrayBuffer();
-    const fileBuffer = Buffer.from(arrayBuffer);
 
-    // Upload to Cloudinary
-    const result = await new Promise((resolve, reject) => {
-      const uploadStream = cloudinary.uploader.upload_stream(
-        {},
-        (error, result) => {
-          if (error) reject(error);
-          else resolve(result);
+    if (!fileResponse.ok) {
+      console.error("Directus file download failed:", fileResponse.statusText);
+      return res.status(400).json({ error: "File download failed" });
+    }
+
+    const contentType = fileResponse.headers.get("content-type");
+    console.log("Fetched file content-type:", contentType);
+
+    // Check content type
+    if (!contentType.startsWith("image/")) {
+      return res.status(400).json({ error: "Not an image file" });
+    }
+
+    // Upload to Cloudinary using stream
+    const uploadStream = cloudinary.uploader.upload_stream(
+      { folder: "MandarAssets" },
+      (error, result) => {
+        if (error) {
+          console.error("Cloudinary upload error:", error);
+          res.status(500).json({ error: "Cloudinary upload failed" });
+        } else {
+          console.log("Uploaded to Cloudinary:", result.secure_url);
+          res.json({ cloudinary_url: result.secure_url });
         }
-      );
-      uploadStream.end(fileBuffer);
-    });
+      }
+    );
 
-    console.log("Uploaded to Cloudinary:", result.secure_url);
-
-    // Respond with Cloudinary URL
-    res.json({
-      cloudinary_url: result.secure_url,
-    });
+    fileResponse.body.pipe(uploadStream);
   } catch (err) {
-    console.error("Error uploading to Cloudinary:", err);
-    res.status(500).json({ error: "Upload failed" });
+    console.error("Server error:", err);
+    res.status(500).json({ error: "Unexpected server error" });
   }
 });
 
