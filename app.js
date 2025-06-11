@@ -38,7 +38,7 @@ app.post("/upload-image", async (req, res) => {
     // 🌟 Upload to Cloudinary
     const result = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: "Mandar Assets" },
+        { folder: "MandarAssets" },
         (error, result) => {
           if (error) {
             reject(error);
