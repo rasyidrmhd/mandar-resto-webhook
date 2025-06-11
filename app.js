@@ -22,43 +22,37 @@ app.get("/health", (req, res) => {
 
 app.post("/upload-image", async (req, res) => {
   console.log("Webhook received:", req.body);
-  const { event, payload } = req.body;
-
-  if (event !== "files.create") {
-    return res.status(200).send("Not a file creation event.");
-  }
-
-  const fileUrl = payload.data.data.full_url;
-  const fileId = payload.data.data.id;
+  const { id, image } = req.body.data;
+  console.log("Received webhook:", req.body);
 
   try {
-    const response = await fetch(fileUrl);
-    const buffer = await response.buffer();
+    // Get the file from Directus
+    const directusFileUrl = `https://mandar-resto-server.onrender.com/assets/${image}`;
+    const fileResponse = await fetch(directusFileUrl);
+    const arrayBuffer = await fileResponse.arrayBuffer();
+    const fileBuffer = Buffer.from(arrayBuffer);
 
-    // 🌟 Upload to Cloudinary
+    // Upload to Cloudinary
     const result = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
-        { folder: "MandarAssets" },
+        { folder: "Mandar_Assets" },
         (error, result) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(result);
-          }
+          if (error) reject(error);
+          else resolve(result);
         }
       );
-      uploadStream.end(buffer);
+      uploadStream.end(fileBuffer);
     });
 
-    console.log("Cloudinary URL:", result.secure_url);
+    console.log("Uploaded to Cloudinary:", result.secure_url);
 
-    res.status(200).json({
-      message: "File uploaded to Cloudinary!",
-      cloudinaryUrl: result.secure_url,
+    // Respond with Cloudinary URL
+    res.json({
+      cloudinary_url: result.secure_url,
     });
   } catch (err) {
-    console.error("Error:", err);
-    res.status(500).json({ error: "Upload failed." });
+    console.error("Error uploading to Cloudinary:", err);
+    res.status(500).json({ error: "Upload failed" });
   }
 });
 
