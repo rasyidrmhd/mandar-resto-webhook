@@ -1,9 +1,10 @@
 require("dotenv").config();
 
 const express = require("express");
+const { v2 } = require("cloudinary");
 const fetcher = require("node-fetch");
 const bodyParser = require("body-parser");
-const { v2 } = require("cloudinary");
+const serverless = require("serverless-http");
 
 v2.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -67,6 +68,5 @@ app.post("/upload-image", urlencodedParser, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Server run on port: ${PORT}`));
-
 module.exports = app;
+module.exports.handler = serverless(app);
