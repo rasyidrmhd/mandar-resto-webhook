@@ -17,6 +17,8 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 const urlencodedParser = bodyParser.urlencoded({ extended: true });
 
+app.get("/", (req, res) => res.send("Just webhook"));
+
 app.get("/health", (req, res) => {
   return res.status(200).send("This webhook is 100% healthy (maybe)");
 });
