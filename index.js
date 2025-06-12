@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import express from "express";
 import fetch from "node-fetch";
-import serverless from "serverless-http";
 import { v2 as cloudinary } from "cloudinary";
 
 dotenv.config();
@@ -12,6 +11,7 @@ cloudinary.config({
 });
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -64,4 +64,6 @@ app.post("/upload-image", async (req, res) => {
   }
 });
 
-export default serverless(app);
+app.listen(PORT, () => {
+  console.log(`Server run on port ${PORT}`);
+});
