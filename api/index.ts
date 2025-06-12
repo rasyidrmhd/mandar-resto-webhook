@@ -65,6 +65,6 @@ app.post("/upload-image", urlencodedParser, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Server run on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server run on port: ${PORT}`));
 
 module.exports = app;
