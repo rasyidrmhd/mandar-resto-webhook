@@ -1,6 +1,8 @@
 import dotenv from "dotenv";
 import express from "express";
 import { v2 as cloudinary } from "cloudinary";
+import { Readable } from "stream";
+import { pipeline } from "stream/promises";
 
 dotenv.config();
 cloudinary.config({
@@ -41,20 +43,24 @@ app.post("/upload-image", async (req, res) => {
       return res.status(400).json({ error: "Not an image file" });
     }
 
-    const uploadStream = cloudinary.uploader.upload_stream(
-      { folder: "MandarAssets" },
-      (error, result) => {
-        if (error) {
-          console.error("Cloudinary upload error:", error);
-          res.status(500).json({ error: "Cloudinary upload failed" });
-        } else {
-          console.log("Uploaded to Cloudinary:", result.secure_url);
-          res.json({ cloudinary_url: result.secure_url });
-        }
-      }
-    );
+    const nodeReadableStream = Readable.fromWeb(fileResponse.body);
 
-    fileResponse.body.pipe(uploadStream);
+    const cloudinaryUpload = () =>
+      new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          { folder: "MandarAssets" },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        pipeline(nodeReadableStream, uploadStream).catch(reject);
+      });
+
+    const result = await cloudinaryUpload();
+
+    console.log("Uploaded to Cloudinary:", result.secure_url);
+    res.json({ cloudinary_url: result.secure_url });
   } catch (err) {
     console.error("Server error:", err);
     res.status(500).json({ error: "Unexpected server error" });
