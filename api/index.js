@@ -24,6 +24,5 @@ app.get("/health", (req, res) => {
   return res.status(200).send("This webhook is 100% healthy (maybe)");
 });
 
-app.listen(PORT, () => console.log(`Server run on: ${PORT}`));
-
 module.exports = app;
+module.exports.handler = serverless(app);
