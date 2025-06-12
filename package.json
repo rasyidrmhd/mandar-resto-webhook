@@ -1,7 +1,7 @@
 {
   "name": "mandar-resto-webhook",
   "version": "1.0.0",
-  "main": "app.js",
+  "main": "index.js",
   "dependencies": {
     "cloudinary": "^2.6.1",
     "dotenv": "^16.5.0",
@@ -9,8 +9,8 @@
     "node-fetch": "^3.3.2"
   },
   "scripts": {
-    "start": "node app.js",
-    "dev": "nodemon app.js",
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

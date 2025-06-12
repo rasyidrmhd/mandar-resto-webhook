@@ -1,10 +1,11 @@
-import dotenv from "dotenv";
-import express from "express";
-import fetch from "node-fetch";
-import { v2 as cloudinary } from "cloudinary";
+require("dotenv").config();
 
-dotenv.config();
-cloudinary.config({
+const express = require("express");
+const fetch = require("node-fetch");
+const bodyParser = require("body-parser");
+const { v2 } = require("cloudinary");
+
+v2.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
@@ -14,13 +15,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+const urlencodedParser = bodyParser.urlencoded({ extended: true });
 
 app.get("/health", (req, res) => {
   return res.status(200).send("This webhook is 100% healthy (maybe)");
 });
 
-app.post("/upload-image", async (req, res) => {
+app.post("/upload-image", urlencodedParser, async (req, res) => {
   const { id, image } = req.body.data;
   console.log("Received image ID:", image);
 
@@ -64,6 +65,6 @@ app.post("/upload-image", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server run on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`Server run on port ${PORT}`));
+
+module.exports = app;
