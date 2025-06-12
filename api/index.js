@@ -1,6 +1,5 @@
 import dotenv from "dotenv";
 import express from "express";
-import fetcher from "node-fetch";
 import { v2 as cloudinary } from "cloudinary";
 
 dotenv.config();
@@ -28,7 +27,7 @@ app.post("/upload-image", async (req, res) => {
   console.log("Downloading from:", directusFileUrl);
 
   try {
-    const fileResponse = await fetcher(directusFileUrl);
+    const fileResponse = await fetch(directusFileUrl);
 
     if (!fileResponse.ok) {
       console.error("Directus file download failed:", fileResponse.statusText);
