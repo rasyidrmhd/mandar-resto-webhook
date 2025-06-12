@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
-const fetch = require("node-fetch");
+const fetcher = require("node-fetch");
 const bodyParser = require("body-parser");
 const { v2 } = require("cloudinary");
 
@@ -29,9 +29,9 @@ app.post("/upload-image", urlencodedParser, async (req, res) => {
   console.log("Downloading from:", directusFileUrl);
 
   try {
-    const fileResponse = await fetch(directusFileUrl);
+    const fileResponse = await fetcher(directusFileUrl);
 
-    if (!fileResponse.ok) {
+    if (!fileResponse.body || !fileResponse.ok) {
       console.error("Directus file download failed:", fileResponse.statusText);
       return res.status(400).json({ error: "File download failed" });
     }
@@ -40,12 +40,12 @@ app.post("/upload-image", urlencodedParser, async (req, res) => {
     console.log("Fetched file content-type:", contentType);
 
     // Check content type
-    if (!contentType.startsWith("image/")) {
+    if (!contentType || !contentType.startsWith("image/")) {
       return res.status(400).json({ error: "Not an image file" });
     }
 
     // Upload to Cloudinary using stream
-    const uploadStream = cloudinary.uploader.upload_stream(
+    const uploadStream = v2.uploader.upload_stream(
       { folder: "MandarAssets" },
       (error, result) => {
         if (error) {
@@ -58,7 +58,7 @@ app.post("/upload-image", urlencodedParser, async (req, res) => {
       }
     );
 
-    fileResponse.body.pipe(uploadStream);
+    fileResponse.body.pipeTo(uploadStream);
   } catch (err) {
     console.error("Server error:", err);
     res.status(500).json({ error: "Unexpected server error" });
