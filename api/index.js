@@ -32,7 +32,7 @@ app.post("/upload-image", urlencodedParser, async (req, res) => {
   try {
     const fileResponse = await fetch(directusFileUrl);
 
-    if (!fileResponse.body || !fileResponse.ok) {
+    if (!fileResponse.ok) {
       console.error("Directus file download failed:", fileResponse.statusText);
       return res.status(400).json({ error: "File download failed" });
     }
@@ -41,12 +41,12 @@ app.post("/upload-image", urlencodedParser, async (req, res) => {
     console.log("Fetched file content-type:", contentType);
 
     // Check content type
-    if (!contentType || !contentType.startsWith("image/")) {
+    if (!contentType.startsWith("image/")) {
       return res.status(400).json({ error: "Not an image file" });
     }
 
     // Upload to Cloudinary using stream
-    const uploadStream = v2.uploader.upload_stream(
+    const uploadStream = cloudinary.uploader.upload_stream(
       { folder: "MandarAssets" },
       (error, result) => {
         if (error) {
@@ -59,7 +59,7 @@ app.post("/upload-image", urlencodedParser, async (req, res) => {
       }
     );
 
-    fileResponse.body.pipeTo(uploadStream);
+    fileResponse.body.pipe(uploadStream);
   } catch (err) {
     console.error("Server error:", err);
     res.status(500).json({ error: "Unexpected server error" });
@@ -67,5 +67,3 @@ app.post("/upload-image", urlencodedParser, async (req, res) => {
 });
 
 app.listen(PORT, () => console.log(`Server run on port: ${PORT}`));
-
-module.exports = app;
