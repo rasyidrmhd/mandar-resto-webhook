@@ -1,10 +1,9 @@
-require("dotenv").config();
+import dotenv from "dotenv";
+import express from "express";
+import { v2 as cloudinary } from "cloudinary";
 
-const express = require("express");
-const { v2 } = require("cloudinary");
-const bodyParser = require("body-parser");
-
-v2.config({
+dotenv.config();
+cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
@@ -14,15 +13,13 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
-const urlencodedParser = bodyParser.urlencoded({ extended: true });
-
-app.get("/", (req, res) => res.send("Just webhook"));
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/health", (req, res) => {
   return res.status(200).send("This webhook is 100% healthy (maybe)");
 });
 
-app.post("/upload-image", urlencodedParser, async (req, res) => {
+app.post("/upload-image", async (req, res) => {
   const { id, image } = req.body.data;
   console.log("Received image ID:", image);
 
@@ -40,12 +37,10 @@ app.post("/upload-image", urlencodedParser, async (req, res) => {
     const contentType = fileResponse.headers.get("content-type");
     console.log("Fetched file content-type:", contentType);
 
-    // Check content type
     if (!contentType.startsWith("image/")) {
       return res.status(400).json({ error: "Not an image file" });
     }
 
-    // Upload to Cloudinary using stream
     const uploadStream = cloudinary.uploader.upload_stream(
       { folder: "MandarAssets" },
       (error, result) => {
@@ -66,4 +61,6 @@ app.post("/upload-image", urlencodedParser, async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log(`Server run on port: ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
